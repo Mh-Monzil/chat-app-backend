@@ -1,5 +1,6 @@
 import { User } from "../models/user.model.js";
-import bcrypt from "bcryptjs"
+import bcrypt from "bcryptjs";
+import generateTokenAndCookie from "../utils/generateToken.js";
 
 export const signup = async (req, res) => {
   try {
@@ -29,20 +30,43 @@ export const signup = async (req, res) => {
       gender,
       profilePic: gender === "Male" ? boyProfilePic : girlProfilePic,
     });
-    
-    // await newUser.save();
 
-    res.status(201).json({
-        _id: newUser.id,
-    });
+    if (newUser) {
+      await generateTokenAndCookie(newUser._id, res);
+      res.status(201).json({message: "Registration successful"});
+    } else {
+      res.status(400).json({
+        error: "Invalid user data",
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-export const login = (req, res) => {
-  console.log("loginUser");
+export const login = async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    const isPasswordCorrect = await bcrypt.compare(password, user?.password);
+
+    if (!isPasswordCorrect) {
+      return res.status(400).json({ error: "Invalid credentials" });
+    }
+
+    await generateTokenAndCookie(user._id, res);
+
+    res.status(201).json({ message: "Login successful" });
+  } catch (error) {
+    console.log("Error in login controller", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 export const logout = (req, res) => {
