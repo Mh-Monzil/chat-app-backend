@@ -33,7 +33,7 @@ export const signup = async (req, res) => {
 
     if (newUser) {
       await generateTokenAndCookie(newUser._id, res);
-      res.status(201).json({message: "Registration successful"});
+      res.status(201).json({ message: "Registration successful" });
     } else {
       res.status(400).json({
         error: "Invalid user data",
@@ -69,6 +69,12 @@ export const login = async (req, res) => {
   }
 };
 
-export const logout = (req, res) => {
-  console.log("logoutUser");
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie("token", "");
+    res.status(200).json({ message: "Logged out successfully" });
+  } catch (error) {
+    console.log("Error in logout controller", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
