@@ -33,7 +33,12 @@ export const signup = async (req, res) => {
 
     if (newUser) {
       await generateTokenAndCookie(newUser._id, res);
-      res.status(201).json({ message: "Registration successful" });
+      res.status(201).json({
+        _id: newUser._id,
+        fullName: newUser.fullName,
+        username: newUser.username,
+        profilePic: newUser.profilePic,
+      });
     } else {
       res.status(400).json({
         error: "Invalid user data",
@@ -51,18 +56,25 @@ export const login = async (req, res) => {
     const user = await User.findOne({ username });
 
     if (!user) {
-      return res.status(400).json({ error: "Invalid credentials" });
+      return res.status(400).json({ error: "Invalid username or password" });
     }
 
     const isPasswordCorrect = await bcrypt.compare(password, user?.password);
 
     if (!isPasswordCorrect) {
-      return res.status(400).json({ error: "Invalid credentials" });
+      return res.status(400).json({ error: "Invalid username or password" });
     }
 
     await generateTokenAndCookie(user._id, res);
 
-    res.status(201).json({ message: "Login successful" });
+    res
+      .status(201)
+      .json({
+        _id: user._id,
+        fullName: user.fullName,
+        username: user.username,
+        profilePic: user.profilePic,
+      });
   } catch (error) {
     console.log("Error in login controller", error);
     res.status(500).json({ error: "Internal Server Error" });
